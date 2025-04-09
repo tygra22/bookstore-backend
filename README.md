@@ -68,7 +68,7 @@ The setup script automatically creates an admin user with the following credenti
 
 ```
 Email: admin@bookstore.com
-Password: admin
+Password: admin123
 ```
 
 You can use these credentials to log in and access admin-only features.

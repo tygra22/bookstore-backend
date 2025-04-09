@@ -22,7 +22,7 @@ const connectDB = async () => {
       const adminUser = new User({
         name: 'Admin',
         email: 'admin@bookstore.com',
-        password: 'admin',
+        password: 'admin123',
         isAdmin: true
       });
       

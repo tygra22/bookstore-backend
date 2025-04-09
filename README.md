@@ -33,13 +33,28 @@ JWT_SECRET=your_jwt_secret
 
 ## Running the Application
 
-### Development Mode
+### Quick Setup (Recommended)
+
+We've created a convenient setup script that will automatically:
+1. Start MongoDB in a Docker container
+2. Use the correct Node.js version with nvm
+3. Install dependencies if needed
+4. Build TypeScript files
+5. Start the backend server
+
+```bash
+npm run setup
+```
+
+### Manual Setup
+
+#### Development Mode
 
 ```bash
 npm run dev
 ```
 
-### Production Mode
+#### Production Mode
 
 ```bash
 npm run build

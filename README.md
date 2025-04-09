@@ -40,7 +40,8 @@ We've created a convenient setup script that will automatically:
 2. Use the correct Node.js version with nvm
 3. Install dependencies if needed
 4. Build TypeScript files
-5. Start the backend server
+5. Create an admin user (if it doesn't exist)
+6. Start the backend server
 
 ```bash
 npm run setup
@@ -60,6 +61,17 @@ npm run dev
 npm run build
 npm start
 ```
+
+## Default Admin Credentials
+
+The setup script automatically creates an admin user with the following credentials:
+
+```
+Email: admin@bookstore.com
+Password: admin
+```
+
+You can use these credentials to log in and access admin-only features.
 
 ## API Endpoints
 

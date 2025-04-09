@@ -54,6 +54,10 @@ fi
 echo "🔄 Building TypeScript files..."
 npm run build
 
+# Create admin user if it doesn't exist
+echo "🔄 Creating admin user if it doesn't exist..."
+npm run create-admin
+
 # Start the backend server
 echo "🚀 Starting backend server..."
 npm run dev

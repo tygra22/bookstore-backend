@@ -129,7 +129,8 @@ router.put('/profile', [
   requireAuth,
   body('name').optional().trim().notEmpty().withMessage('Name cannot be empty if provided'),
   body('email').optional().isEmail().withMessage('Please provide a valid email'),
-  body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+  body('password').optional().notEmpty().withMessage('Current password is required for verification'),
+  body('newPassword').optional().isLength({ min: 6 }).withMessage('New password must be at least 6 characters')
 ], async (req: Request, res: Response): Promise<void> => {
   try {
     // Validation errors
@@ -142,13 +143,24 @@ router.put('/profile', [
     // User is already attached to req by requireAuth middleware
     const user = req.user as IUser & Document;
 
+    // Update basic profile fields
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.address = req.body.address || user.address;
     user.phone = req.body.phone || user.phone;
 
-    if (req.body.password) {
-      user.password = req.body.password;
+    // Handle password change if requested
+    if (req.body.password && req.body.newPassword) {
+      // Verify the current password first
+      const isMatch = await user.comparePassword(req.body.password);
+      
+      if (!isMatch) {
+        res.status(400).json({ message: 'Current password is incorrect' });
+        return;
+      }
+      
+      // Set the new password
+      user.password = req.body.newPassword;
     }
 
     const updatedUser = await user.save();

@@ -4,9 +4,11 @@ import { Strategy as LocalStrategy } from 'passport-local';
 import User from '../models/User';
 
 // JWT Strategy for token authentication
+// Hard-coded JWT secret for Railway deployment
+// NOTE: This is NOT best practice and should be temporary
 const jwtOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  secretOrKey: process.env.JWT_SECRET || 'defaultsecret'
+  secretOrKey: 'HMteGawXDysvMBXBEXCeDKVBJuLrFyal' // Using the same secret as MongoDB password for simplicity
 };
 
 passport.use(

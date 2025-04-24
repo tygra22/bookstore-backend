@@ -9,7 +9,9 @@ const router: Router = express.Router();
 
 // Helper function to generate a token
 const generateToken = (id: string): string => {
-  const secret = process.env.JWT_SECRET || 'defaultsecret';
+  // Hard-coded JWT secret for Railway deployment
+  // NOTE: This is NOT best practice and should be temporary
+  const secret = 'HMteGawXDysvMBXBEXCeDKVBJuLrFyal';
   return jwt.sign({ id }, secret, {
     expiresIn: '30d'
   });

@@ -6,8 +6,10 @@ WORKDIR /app
 # Copy package files for better layer caching
 COPY package*.json ./
 
-# Install all dependencies including dev dependencies
+# Install with specific Express version known to be compatible
 RUN npm ci
+# Explicitly downgrade Express to a compatible version
+RUN npm uninstall express && npm install express@4.18.2
 
 # Copy only the necessary files for building
 COPY tsconfig.json ./
@@ -29,9 +31,10 @@ COPY package*.json ./
 
 # Install only production dependencies
 RUN npm ci --only=production && \
+    npm uninstall express && npm install express@4.18.2 && \
     # Add a non-root user for security
     apt-get update -qq && \
-    apt-get install -y --no-install-recommends dumb-init && \
+    apt-get install -y --no-install-recommends dumb-init curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     adduser --disabled-password --gecos "" nodeuser && \

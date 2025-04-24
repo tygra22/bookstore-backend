@@ -91,11 +91,13 @@ connectWithRetry();
 import booksRoutes from './routes/books';
 import ordersRoutes from './routes/orders';
 import usersRoutes from './routes/users';
+import adminRoutes from './routes/admin';
 
 // Use routes
 app.use('/api/books', booksRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Basic route for testing
 app.get('/', (req: Request, res: Response) => {

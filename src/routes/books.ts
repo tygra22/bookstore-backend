@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import express, { Router, Request, Response } from 'express';
 import Book from '../models/Book';
 
 const router: Router = express.Router();
@@ -6,11 +6,11 @@ const router: Router = express.Router();
 // @route   GET /api/books
 // @desc    Get all books
 // @access  Public
-router.get('/', async (req, res) => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const books = await Book.find({});
     res.json(books);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -19,16 +19,17 @@ router.get('/', async (req, res) => {
 // @route   GET /api/books/:id
 // @desc    Get book by ID
 // @access  Public
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const book = await Book.findById(req.params.id);
     
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      res.status(404).json({ message: 'Book not found' });
+      return;
     }
     
     res.json(book);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -37,7 +38,7 @@ router.get('/:id', async (req, res) => {
 // @route   POST /api/books
 // @desc    Create a book
 // @access  Private/Admin
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -56,7 +57,8 @@ router.post('/', async (req, res) => {
     const bookExists = await Book.findOne({ isbn });
 
     if (bookExists) {
-      return res.status(400).json({ message: 'Book already exists' });
+      res.status(400).json({ message: 'Book already exists' });
+      return;
     }
 
     const book = new Book({
@@ -75,7 +77,7 @@ router.post('/', async (req, res) => {
 
     const createdBook = await book.save();
     res.status(201).json(createdBook);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -84,7 +86,7 @@ router.post('/', async (req, res) => {
 // @route   PUT /api/books/:id
 // @desc    Update a book
 // @access  Private/Admin
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const {
       title,
@@ -103,7 +105,8 @@ router.put('/:id', async (req, res) => {
     const book = await Book.findById(req.params.id);
 
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      res.status(404).json({ message: 'Book not found' });
+      return;
     }
 
     book.title = title || book.title;
@@ -120,7 +123,7 @@ router.put('/:id', async (req, res) => {
 
     const updatedBook = await book.save();
     res.json(updatedBook);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -129,17 +132,18 @@ router.put('/:id', async (req, res) => {
 // @route   DELETE /api/books/:id
 // @desc    Delete a book
 // @access  Private/Admin
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const book = await Book.findById(req.params.id);
 
     if (!book) {
-      return res.status(404).json({ message: 'Book not found' });
+      res.status(404).json({ message: 'Book not found' });
+      return;
     }
 
     await book.deleteOne();
     res.json({ message: 'Book removed' });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }

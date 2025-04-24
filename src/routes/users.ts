@@ -1,8 +1,9 @@
-import express, { Router, Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import express, { Request, Response, Router } from 'express';
 import { body, validationResult } from 'express-validator';
+import jwt from 'jsonwebtoken';
+import { Document } from 'mongoose';
+import { localAuth, requireAuth } from '../middleware/auth';
 import User, { IUser } from '../models/User';
-import { requireAuth, localAuth } from '../middleware/auth';
 
 const router: Router = express.Router();
 
@@ -21,25 +22,27 @@ router.post('/register', [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response): Promise<void> => {
   try {
     // Validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
-    
+
     const { name, email, password, address, phone } = req.body;
 
     // Check if user already exists
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      res.status(400).json({ message: 'User already exists' });
+      return;
     }
 
     // Create new user
-    const user = await User.create({
+    const user: IUser = await User.create({
       name,
       email,
       password,
@@ -53,12 +56,12 @@ router.post('/register', [
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
-        token: generateToken(user._id)
+        token: generateToken(user._id.toString())
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -70,33 +73,34 @@ router.post('/register', [
 router.post('/login', [
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').notEmpty().withMessage('Password is required')
-], localAuth, (req: Request, res: Response) => {
+], localAuth, (req: Request, res: Response): void => {
   // Validation errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    res.status(400).json({ errors: errors.array() });
+    return;
   }
-  
+
   // User is already authenticated by localAuth middleware
-  const user = req.user as IUser;
-  
+  const user = req.user as IUser & Document;
+
   res.json({
     _id: user._id,
     name: user.name,
     email: user.email,
     isAdmin: user.isAdmin,
-    token: generateToken(user._id)
+    token: generateToken(user._id.toString())
   });
 });
 
 // @route   GET /api/users/profile
 // @desc    Get user profile
 // @access  Private
-router.get('/profile', requireAuth, (req: Request, res: Response) => {
+router.get('/profile', requireAuth, (req: Request, res: Response): void => {
   try {
     // User is already attached to req by requireAuth middleware
-    const user = req.user as IUser;
-    
+    const user = req.user as IUser & Document;
+
     // Don't send the password back to the client
     const userWithoutPassword = {
       _id: user._id,
@@ -108,9 +112,9 @@ router.get('/profile', requireAuth, (req: Request, res: Response) => {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt
     };
-    
+
     res.json(userWithoutPassword);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -124,28 +128,29 @@ router.put('/profile', [
   body('name').optional().trim().notEmpty().withMessage('Name cannot be empty if provided'),
   body('email').optional().isEmail().withMessage('Please provide a valid email'),
   body('password').optional().isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response): Promise<void> => {
   try {
     // Validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
-    
+
     // User is already attached to req by requireAuth middleware
-    const user = req.user as IUser;
-    
+    const user = req.user as IUser & Document;
+
     user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
     user.address = req.body.address || user.address;
     user.phone = req.body.phone || user.phone;
-    
+
     if (req.body.password) {
       user.password = req.body.password;
     }
-    
+
     const updatedUser = await user.save();
-    
+
     res.json({
       _id: updatedUser._id,
       name: updatedUser.name,
@@ -153,9 +158,9 @@ router.put('/profile', [
       address: updatedUser.address,
       phone: updatedUser.phone,
       isAdmin: updatedUser.isAdmin,
-      token: generateToken(updatedUser._id)
+      token: generateToken(updatedUser._id.toString())
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }

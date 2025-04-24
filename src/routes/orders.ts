@@ -8,11 +8,11 @@ const router: Router = express.Router();
 // @route   GET /api/orders
 // @desc    Get all orders
 // @access  Private/Admin
-router.get('/', requireAdmin, async (req: Request, res: Response) => {
+router.get('/', requireAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
     const orders = await Order.find({}).populate('user', 'id name');
     res.json(orders);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -21,11 +21,11 @@ router.get('/', requireAdmin, async (req: Request, res: Response) => {
 // @route   GET /api/orders/myorders
 // @desc    Get logged in user orders
 // @access  Private
-router.get('/myorders', requireAuth, async (req: Request, res: Response) => {
+router.get('/myorders', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const orders = await Order.find({ user: req.user?._id });
     res.json(orders);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -34,22 +34,24 @@ router.get('/myorders', requireAuth, async (req: Request, res: Response) => {
 // @route   GET /api/orders/:id
 // @desc    Get order by ID
 // @access  Private
-router.get('/:id', requireAuth, async (req: Request, res: Response) => {
+router.get('/:id', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const order = await Order.findById(req.params.id).populate('user', 'name email');
 
     // Check if order exists
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      res.status(404).json({ message: 'Order not found' });
+      return;
     }
 
     // Make sure the logged in user is either admin or the order owner
     if ((!req.user?.isAdmin) && order.user._id.toString() !== req.user?._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to view this order' });
+      res.status(403).json({ message: 'Not authorized to view this order' });
+      return;
     }
 
     res.json(order);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -68,12 +70,13 @@ router.post('/', [
   body('shippingAddress.postalCode').notEmpty().withMessage('Postal code is required'),
   body('shippingAddress.country').notEmpty().withMessage('Country is required'),
   body('paymentMethod').notEmpty().withMessage('Payment method is required')
-], async (req: Request, res: Response) => {
+], async (req: Request, res: Response): Promise<void> => {
   try {
     // Validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      res.status(400).json({ errors: errors.array() });
+      return;
     }
 
     const {
@@ -88,7 +91,8 @@ router.post('/', [
 
     // Ensure we have order items
     if (orderItems && orderItems.length === 0) {
-      return res.status(400).json({ message: 'No order items' });
+      res.status(400).json({ message: 'No order items' });
+      return;
     }
 
     // Create new order
@@ -105,7 +109,7 @@ router.post('/', [
 
     const createdOrder = await order.save();
     res.status(201).json(createdOrder);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -114,17 +118,19 @@ router.post('/', [
 // @route   PUT /api/orders/:id/pay
 // @desc    Update order to paid
 // @access  Private
-router.put('/:id/pay', requireAuth, async (req: Request, res: Response) => {
+router.put('/:id/pay', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const order = await Order.findById(req.params.id);
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      res.status(404).json({ message: 'Order not found' });
+      return;
     }
 
     // Make sure the logged in user is either admin or the order owner
     if ((!req.user?.isAdmin) && order.user.toString() !== req.user?._id.toString()) {
-      return res.status(403).json({ message: 'Not authorized to update this order' });
+      res.status(403).json({ message: 'Not authorized to update this order' });
+      return;
     }
 
     order.isPaid = true;
@@ -138,7 +144,7 @@ router.put('/:id/pay', requireAuth, async (req: Request, res: Response) => {
 
     const updatedOrder = await order.save();
     res.json(updatedOrder);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }
@@ -147,12 +153,13 @@ router.put('/:id/pay', requireAuth, async (req: Request, res: Response) => {
 // @route   PUT /api/orders/:id/deliver
 // @desc    Update order to delivered
 // @access  Private/Admin
-router.put('/:id/deliver', requireAdmin, async (req: Request, res: Response) => {
+router.put('/:id/deliver', requireAdmin, async (req: Request, res: Response): Promise<void> => {
   try {
     const order = await Order.findById(req.params.id);
 
     if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
+      res.status(404).json({ message: 'Order not found' });
+      return;
     }
 
     order.isDelivered = true;
@@ -161,7 +168,7 @@ router.put('/:id/deliver', requireAdmin, async (req: Request, res: Response) => 
 
     const updatedOrder = await order.save();
     res.json(updatedOrder);
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
   }

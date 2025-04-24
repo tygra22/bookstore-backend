@@ -8,6 +8,8 @@ export interface IUser extends Document {
   email: string;
   password: string;
   address?: string;
+  city?: string;
+  zipCode?: string;
   phone?: string;
   isAdmin: boolean;
   createdAt: Date;
@@ -35,6 +37,14 @@ const UserSchema: Schema = new Schema({
     minlength: 6
   },
   address: {
+    type: String,
+    trim: true
+  },
+  city: {
+    type: String,
+    trim: true
+  },
+  zipCode: {
     type: String,
     trim: true
   },

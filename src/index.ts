@@ -13,11 +13,9 @@ dotenv.config();
 // Initialize Express app
 const app: Express = express();
 
-// Middleware
-// Allow all origins temporarily for debugging
 app.use(cors({
   origin: '*',  // Allow all origins for troubleshooting
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
@@ -88,10 +86,10 @@ const connectWithRetry = async (attempt = 1, maxAttempts = 5) => {
 connectWithRetry();
 
 // Import routes
+import adminRoutes from './routes/admin';
 import booksRoutes from './routes/books';
 import ordersRoutes from './routes/orders';
 import usersRoutes from './routes/users';
-import adminRoutes from './routes/admin';
 
 // Use routes
 app.use('/api/books', booksRoutes);

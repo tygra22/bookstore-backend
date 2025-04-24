@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Query } from 'mongoose';
 
 // Define the interface for a Book document
 export interface IBook extends Document {
@@ -19,15 +19,18 @@ export interface IBook extends Document {
 
 // Create the Book schema
 const BookSchema: Schema = new Schema({
+  // Adding explicit indexes for fields that will be frequently searched
   title: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    index: true // Index for faster title searches
   },
   author: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    index: true // Index for faster author searches
   },
   isbn: {
     type: String,
@@ -38,7 +41,8 @@ const BookSchema: Schema = new Schema({
   genre: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    index: true // Index for faster genre searches
   },
   price: {
     type: Number,
@@ -85,6 +89,13 @@ BookSchema.pre('save', function(next) {
   this.updatedAt = Date.now();
   next();
 });
+
+// Create compound indexes for common search combinations
+BookSchema.index({ title: 1, author: 1 }); // For searches that combine title and author
+BookSchema.index({ genre: 1, price: 1 }); // For filtered searches by genre and price range
+
+// Create text index for full-text search capabilities
+BookSchema.index({ title: 'text', author: 'text', description: 'text' });
 
 // Create and export the Book model
 export default mongoose.model<IBook>('Book', BookSchema);

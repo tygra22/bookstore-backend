@@ -4,12 +4,79 @@ import Book from '../models/Book';
 const router: Router = express.Router();
 
 // @route   GET /api/books
-// @desc    Get all books
+// @desc    Get all books with optional filtering
 // @access  Public
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const books = await Book.find({});
-    res.json(books);
+    const {
+      title,
+      author,
+      isbn,
+      genre,
+      minPrice,
+      maxPrice,
+      inStock,
+      search, // for text search across multiple fields
+      sort = 'title', // default sort by title
+      order = 'asc', // default ascending order
+      limit = 20,
+      page = 1
+    } = req.query;
+
+    // Build query filter
+    const filter: any = {};
+    
+    // Add specific field filters if provided
+    if (title) filter.title = { $regex: new RegExp(String(title), 'i') };
+    if (author) filter.author = { $regex: new RegExp(String(author), 'i') };
+    if (isbn) filter.isbn = String(isbn);
+    if (genre) filter.genre = { $regex: new RegExp(String(genre), 'i') };
+    
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+    
+    // Stock availability filter
+    if (inStock === 'true') filter.quantity = { $gt: 0 };
+    
+    // Query builder
+    let query = Book.find(filter);
+    
+    // Text search across multiple fields if search parameter is provided
+    if (search) {
+      // This utilizes the text index we created in the Book model
+      query = Book.find(
+        { $text: { $search: String(search) } },
+        { score: { $meta: 'textScore' } }
+      ).sort({ score: { $meta: 'textScore' } });
+    } else {
+      // Apply sorting
+      const sortOrder = order === 'desc' ? -1 : 1;
+      const sortField = String(sort);
+      query = query.sort({ [sortField]: sortOrder });
+    }
+    
+    // Apply pagination
+    const skip = (Number(page) - 1) * Number(limit);
+    query = query.skip(skip).limit(Number(limit));
+    
+    // Execute query
+    const books = await query.exec();
+    
+    // Get total count for pagination metadata
+    const total = await Book.countDocuments(filter);
+    
+    res.json({
+      books,
+      pagination: {
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit))
+      }
+    });
   } catch (error: any) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
